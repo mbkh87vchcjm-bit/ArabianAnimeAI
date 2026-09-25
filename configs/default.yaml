@@ -1,0 +1,65 @@
+# ArabianAnimeAI Default System Configuration
+
+system:
+  seed: 42
+  device: "cuda" # "cuda" or "cpu"
+  num_workers: 4
+  experiments_dir: "experiments"
+  output_dir: "outputs"
+
+data:
+  dataset_name: "anime_video_dataset"
+  data_root: "data"
+  fps: 24
+  resolution: [512, 512]
+  num_frames: 16
+  batch_size: 2
+
+models:
+  vae:
+    latent_channels: 4
+    downsample_factor: 8
+    spatial_compression: 8
+    temporal_compression: 4
+  transformer:
+    embed_dim: 768
+    num_heads: 12
+    depth: 12
+    patch_size: [1, 2, 2]
+    context_dim: 768
+
+conditioning:
+  text_embedder:
+    dim: 768
+    max_length: 77
+  reference_embedder:
+    feature_dim: 512
+
+memory:
+  character_memory:
+    max_entities: 100
+    embedding_dim: 512
+  world_memory:
+    max_locations: 50
+    embedding_dim: 512
+
+long_video:
+  chunk_frames: 16
+  overlap_frames: 4
+  temporal_memory_size: 8
+
+evaluation:
+  consistency_threshold: 0.85
+  metrics: ["lpips", "clip_score", "face_similarity"]
+
+video:
+  output_format: "mp4"
+  codec: "libx264"
+  bitrate: "5M"
+
+training:
+  epochs: 100
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  save_every_n_steps: 1000
+  checkpoint_dir: "checkpoints"
