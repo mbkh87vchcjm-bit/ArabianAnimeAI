@@ -29,7 +29,7 @@ class CheckpointMetadata:
 class CheckpointManager:
     """
     Abstracts saving and loading PyTorch checkpoints alongside structured metadata.
-    Prevents loss of successful experiments and checkpoints.
+    Uses state_dict-based persistence to preserve models, optimizers, schedulers, and experiment state.
     """
 
     def __init__(self, checkpoint_dir: str):
@@ -41,10 +41,11 @@ class CheckpointManager:
         filename: str,
         state_dict: Dict[str, Any],
         metadata: CheckpointMetadata,
-        optimizer_state: Optional[Dict[str, Any]] = None
+        optimizer_state: Optional[Dict[str, Any]] = None,
+        scheduler_state: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Saves checkpoint tensor state dict, optimizer state, and metadata.
+        Saves model state_dict, optional optimizer_state, optional scheduler_state, and metadata.
         """
         if not filename.endswith(".pt") and not filename.endswith(".pth"):
             filename = f"{filename}.pt"
@@ -55,6 +56,7 @@ class CheckpointManager:
         checkpoint_payload = {
             "state_dict": state_dict,
             "optimizer_state": optimizer_state,
+            "scheduler_state": scheduler_state,
             "metadata": metadata.to_dict()
         }
 
@@ -67,7 +69,7 @@ class CheckpointManager:
 
     def load_checkpoint(self, filename: str, map_location: str = "cpu") -> Dict[str, Any]:
         """
-        Loads checkpoint state dict and metadata.
+        Loads checkpoint state dict, optimizer state, scheduler state, and metadata payload.
         """
         if not filename.endswith(".pt") and not filename.endswith(".pth"):
             filename = f"{filename}.pt"

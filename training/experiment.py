@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import uuid
 from typing import Any, Dict, Optional
 import yaml
 from configs.config_loader import Config
@@ -15,7 +16,10 @@ class ExperimentTracker:
         self.experiment_name = experiment_name
         self.base_dir = base_dir
         self.timestamp = time.strftime("%Y%m%d_%H%M%S")
-        self.run_id = f"{experiment_name}_{self.timestamp}"
+        # Add microsecond timestamp component and short UUID hex fragment to prevent run ID collisions
+        microseconds = f"{int((time.time() % 1) * 1_000_000):06d}"
+        short_uuid = uuid.uuid4().hex[:6]
+        self.run_id = f"{experiment_name}_{self.timestamp}_{microseconds}_{short_uuid}"
         self.experiment_dir = os.path.join(base_dir, self.run_id)
         self.checkpoints_dir = os.path.join(self.experiment_dir, "checkpoints")
         self.logs_dir = os.path.join(self.experiment_dir, "logs")

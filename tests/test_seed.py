@@ -17,3 +17,10 @@ def test_set_seed_reproducibility():
     assert py_val_1 == py_val_2
     assert np.allclose(np_val_1, np_val_2)
     assert torch.equal(torch_val_1, torch_val_2)
+
+def test_set_seed_options():
+    seed = set_seed(999, deterministic=True, benchmark=False, use_deterministic_algorithms=False)
+    assert seed == 999
+    if hasattr(torch, "backends") and hasattr(torch.backends, "cudnn"):
+        assert torch.backends.cudnn.deterministic is True
+        assert torch.backends.cudnn.benchmark is False

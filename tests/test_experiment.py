@@ -19,3 +19,17 @@ def test_experiment_tracker_creation():
         assert os.path.exists(metadata_path)
     finally:
         shutil.rmtree(temp_dir)
+
+def test_experiment_tracker_unique_run_ids():
+    temp_dir = tempfile.mkdtemp()
+    try:
+        config = load_config("configs/default.yaml")
+        tracker1 = ExperimentTracker("run", base_dir=temp_dir, config=config)
+        tracker2 = ExperimentTracker("run", base_dir=temp_dir, config=config)
+
+        assert tracker1.run_id != tracker2.run_id
+        assert tracker1.get_experiment_dir() != tracker2.get_experiment_dir()
+        assert os.path.exists(tracker1.get_experiment_dir())
+        assert os.path.exists(tracker2.get_experiment_dir())
+    finally:
+        shutil.rmtree(temp_dir)
