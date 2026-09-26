@@ -13,9 +13,10 @@ def set_seed(
 
     Args:
         seed (int): The seed value to set.
-        deterministic (bool): If True, configures PyTorch CUDNN backends for determinism (torch.backends.cudnn.deterministic).
-        benchmark (bool): If True, enables PyTorch CUDNN benchmarking for performance (torch.backends.cudnn.benchmark).
+        deterministic (bool): If True, configures PyTorch CUDNN backends for determinism.
+        benchmark (bool): If True, enables PyTorch CUDNN benchmarking for performance (disabled if deterministic=True).
         use_deterministic_algorithms (bool): If True, configures PyTorch to throw errors for non-deterministic operations.
+                                            If False, explicitly resets PyTorch deterministic algorithms flag to False.
 
     Note:
         Full mathematical reproducibility across hardware, CUDA driver versions, or PyTorch operators is NOT
@@ -33,11 +34,12 @@ def set_seed(
 
     if hasattr(torch, "backends") and hasattr(torch.backends, "cudnn"):
         torch.backends.cudnn.deterministic = deterministic
-        torch.backends.cudnn.benchmark = benchmark
+        # Enforce benchmark = False if deterministic = True to prevent conflicting cuDNN settings
+        torch.backends.cudnn.benchmark = benchmark if not deterministic else False
 
-    if use_deterministic_algorithms and hasattr(torch, "use_deterministic_algorithms"):
+    if hasattr(torch, "use_deterministic_algorithms"):
         try:
-            torch.use_deterministic_algorithms(True)
+            torch.use_deterministic_algorithms(use_deterministic_algorithms)
         except Exception:
             # Fallback if specific hardware operations do not support strict deterministic mode
             pass

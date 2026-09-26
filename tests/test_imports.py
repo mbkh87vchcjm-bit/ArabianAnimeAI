@@ -20,3 +20,11 @@ def test_imports():
     assert long_video is not None
     assert evaluation is not None
     assert video is not None
+
+def test_new_architecture_contracts_export():
+    from conditioning import BaseStoryCompiler
+    from models import BaseVideoVAE, BaseVideoTransformer
+
+    assert BaseStoryCompiler is not None
+    assert BaseVideoVAE is not None
+    assert BaseVideoTransformer is not None

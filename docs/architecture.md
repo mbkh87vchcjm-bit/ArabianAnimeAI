@@ -4,13 +4,13 @@
 
 `ArabianAnimeAI` is designed as a modular, scalable, and completely custom PyTorch-native research framework for text-to-anime video generation. The fundamental engineering goal is achieving **visual consistency for characters and world locations** across long video sequences and multi-shot animated episodes without relying on third-party proprietary APIs or pre-trained video generation models.
 
-> **Phase 1 Infrastructure Status:** In the current Phase 1 foundation stage, the components detailed below represent the **target architecture specifications and interface contracts**. Actual deep learning weights and generative models (VAE, Diffusion Transformer, Text Encoders) are planned for implementation and training in subsequent phases.
+> **Phase 1 Status:** In the current Phase 1 foundation stage, the components detailed below represent the **target architecture contracts and abstract interfaces**. Actual deep learning weights and generative models (VAE, Diffusion Transformer, Text Encoders) are planned for implementation and training in subsequent phases.
 
 ---
 
-## The 9 Modular Sub-Systems Architecture (Planned Roadmap)
+## The 9 Modular Sub-Systems Architecture
 
-The platform architecture is explicitly decomposed into 9 decoupled components to enable isolated research, custom module development, unit testing, and scalable model building.
+The platform architecture is explicitly decomposed into 9 decoupled abstract contracts to enable isolated research, custom module development, unit testing, and scalable model building.
 
 ```
                               ┌──────────────────────────────────┐
@@ -55,58 +55,38 @@ The platform architecture is explicitly decomposed into 9 decoupled components t
 
 ---
 
-### 1. Story / Prompt Compiler (`conditioning/`)
-- **Role:** Target component to parse narrative scripts, storyboards, or multi-shot scene prompts into structured scene graphs and individual shot specifications.
-- **Planned Responsibilities:**
-  - Extract active entity identifiers (characters, outfits, items) and location tags.
-  - Generate shot-level prompt tokens alongside temporal movement instructions.
-  - Resolve pronouns and maintain contextual continuity across multi-shot sequences.
+### 1. Story / Prompt Compiler (`conditioning/story_compiler.py`)
+- **Interface Contract:** `BaseStoryCompiler`
+- **Role:** Abstract interface to parse narrative scripts, storyboards, or multi-shot scene prompts into structured scene graphs and individual shot specifications.
 
 ### 2. Text Conditioning (`conditioning/text_conditioning.py`)
-- **Role:** Target interface to encode textual descriptions and script semantics into high-dimensional latent context vectors.
-- **Planned Responsibilities:**
-  - Translate compile-time shot descriptions into cross-attention token sequences.
-  - Project multi-modal semantic constraints for insertion into the Transformer backbone.
-  - Support negative prompt embeddings and fine-grained style conditioning.
+- **Interface Contract:** `BaseTextConditioner`
+- **Role:** Abstract interface to encode textual descriptions and script semantics into high-dimensional latent context vectors.
 
 ### 3. Character Memory (`memory/character_memory.py`)
-- **Role:** Target interface to maintain persistent visual identity representations for character entities across scenes and long video runs.
-- **Planned Responsibilities:**
-  - Store multi-angle facial feature embeddings, hair/outfit reference tokens, and identity signature vectors.
-  - Provide reference-guided conditioning inputs to cross-attention/adapter layers during video frame synthesis.
+- **Interface Contract:** `BaseCharacterMemory`
+- **Role:** Abstract interface to maintain persistent visual identity representations for character entities across scenes and long video runs.
 
 ### 4. World Memory (`memory/world_memory.py`)
-- **Role:** Target interface to store environment, architecture, lighting, and spatial background keys for consistent location reproduction.
-- **Planned Responsibilities:**
-  - Preserve spatial visual features of recurrent anime scenes.
-  - Prevent background metamorphosis between camera cuts or camera pans.
+- **Interface Contract:** `BaseWorldMemory`
+- **Role:** Abstract interface to store environment, architecture, lighting, and spatial background keys for consistent location reproduction.
 
-### 5. Video VAE (`models/base.py`)
-- **Role:** Target spatial and temporal autoencoder interface for 3D video compression.
-- **Planned Responsibilities:**
-  - Compress high-resolution RGB video frame tensors $(B, C, T, H, W)$ into compact continuous 3D latent spaces.
-  - Decode generated latent frame tensors back into high-fidelity RGB video frames.
+### 5. Video VAE (`models/vae/base.py`)
+- **Interface Contract:** `BaseVideoVAE` (inherits from `BaseModel`)
+- **Role:** Abstract 3D spatiotemporal variational autoencoder contract (`encode`, `decode`, `forward`) to compress RGB video frame tensors $(B, C, T, H, W)$ into continuous latent representations.
 
-### 6. Video Generation Transformer (`models/base.py`)
-- **Role:** Target 3D/Spatiotemporal Latent Diffusion Transformer (DiT / Video DiT) interface.
-- **Planned Responsibilities:**
-  - Operate on latent representations from the Video VAE.
-  - Denoise latents over timesteps using spatial and temporal self-attention blocks.
+### 6. Video Generation Transformer (`models/transformer/base.py`)
+- **Interface Contract:** `BaseVideoTransformer` (inherits from `BaseModel`)
+- **Role:** Abstract 3D/Spatiotemporal Diffusion Transformer (DiT) contract (`forward`) for denoising latents guided by conditioning vectors.
 
 ### 7. Long Video Engine (`long_video/engine.py`)
-- **Role:** Target interface for managing temporal continuity, chunked frame generation, and sliding window memory for long-form video synthesis.
-- **Planned Responsibilities:**
-  - Split multi-second videos into overlapping frame chunks.
-  - Apply temporal autoregressive or window blending logic to eliminate temporal boundary artifacts.
+- **Interface Contract:** `BaseLongVideoEngine`
+- **Role:** Abstract interface for managing temporal continuity, chunked frame generation, and sliding window memory for long-form video synthesis.
 
 ### 8. Consistency Checker (`evaluation/consistency.py`)
-- **Role:** Target automated evaluation module for visual quality control and character/environment fidelity assurance.
-- **Planned Responsibilities:**
-  - Measure identity similarity metrics (face embedding distance, visual feature cosine distance).
-  - Evaluate temporal smoothness, frame flicker, and prompt alignment metrics.
+- **Interface Contract:** `BaseConsistencyChecker`
+- **Role:** Abstract interface for measuring identity similarity metrics (face embedding distance, visual feature distance) and temporal coherence.
 
 ### 9. Video Assembler (`video/assembler.py`)
-- **Role:** Target final post-processing, scene stitching, and video encoding engine.
-- **Planned Responsibilities:**
-  - Take raw generated video chunks, apply cross-fades or transition rules specified by the Story Compiler.
-  - Encode raw frame tensors into production-ready container formats (`MP4`, `WebM`).
+- **Interface Contract:** `BaseVideoAssembler`
+- **Role:** Abstract interface to combine output video shot chunks, apply shot transitions, and export final encoded video files (`MP4`, `WebM`).

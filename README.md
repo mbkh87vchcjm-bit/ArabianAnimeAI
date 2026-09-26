@@ -4,97 +4,40 @@ An open-source, scalable PyTorch research & development framework for text-to-an
 
 ---
 
-## Current Status: Phase 1 (Foundation & Research Infrastructure)
+## Current Status: Phase 1 (Foundation & Architecture Contracts)
 
-> **Important Note:** This repository is currently in **Phase 1 (Foundation & Research Infrastructure)**. The 9-component target architecture described below represents the long-term design roadmap. AI generation models (such as Video VAE, Diffusion Transformer, and Text Encoders) are **interfaces/planned components** and are **not yet trained or generated** in this phase.
-
----
-
-## Project Overview & Mission
-
-**ArabianAnimeAI** is built from scratch using PyTorch to solve one of the hardest challenges in AI video generation: **maintaining visual consistency** (character identities, costumes, artistic style, and location backgrounds) across multi-shot animated episodes and long video clips.
-
-### Key Technical Principles:
-1. **Zero External Paid API Dependency:** Fully self-contained open-source model architecture built natively on PyTorch.
-2. **Zero Pre-trained Video Weights Assumption:** Built with modular component abstractions designed for custom training from scratch.
-3. **Professional Original Anime Aesthetic:** Designed for high-quality, professional TV anime aesthetics (cel-shading, clean line-art, expressive lighting) without copying or infringing on copyrighted characters or specific existing shows.
-4. **Experiment Preservation & Reproducibility:** Integrated experiment tracking, timestamped output logging, and structured checkpoint metadata management to guarantee that no successful run is lost.
+> **Important Note:** This repository is currently in **Phase 1 (Foundation & Architecture Contracts)**. The 9-component target architecture described below represents the long-term design roadmap. AI generation models (such as Video VAE, Diffusion Transformer, and Text Encoders) are **abstract contracts / interfaces** and are **not yet trained or generated** in this phase.
 
 ---
 
-## Target System Architecture (Planned Roadmap)
+## Architecture Contracts & Planned Components
 
-The ArabianAnimeAI framework is designed around 9 decoupled, modular sub-systems:
+1. **Story / Prompt Compiler (`conditioning/story_compiler.py`)** *(Abstract Interface: `BaseStoryCompiler`)*:
+   - Parses multi-shot scripts, scene storyboards, and character interaction descriptions into structured shot sequence specifications.
 
-```
-                              ┌──────────────────────────────────┐
-                              │     1. Story / Prompt Compiler   │
-                              └────────────────┬─────────────────┘
-                                               │
-                                               ▼
-                              ┌──────────────────────────────────┐
-                              │      2. Text Conditioning        │
-                              └────────────────┬─────────────────┘
-                                               │
-        ┌──────────────────────────────────────┼──────────────────────────────────────┐
-        │                                      │                                      │
-        ▼                                      ▼                                      ▼
-┌──────────────┐                       ┌──────────────┐                       ┌──────────────┐
-│  3. Character│                       │  4. World    │                       │ 5. Video     │
-│     Memory   │                       │    Memory    │                       │    VAE       │
-└───────┬──────┘                       └───────┬──────┘                       └───────┬──────┘
-        │                                      │                                      │
-        └──────────────────────────────────────┼──────────────────────────────────────┘
-                                               │
-                                               ▼
-                              ┌──────────────────────────────────┐
-                              │  6. Video Generation Transformer │
-                              └────────────────┬─────────────────┘
-                                               │
-                                               ▼
-                              ┌──────────────────────────────────┐
-                              │     7. Long Video Engine         │
-                              └────────────────┬─────────────────┘
-                                               │
-                                               ▼
-                              ┌──────────────────────────────────┐
-                              │    8. Consistency Checker        │
-                              └────────────────┬─────────────────┘
-                                               │
-                                               ▼
-                              ┌──────────────────────────────────┐
-                              │     9. Video Assembler           │
-                              └──────────────────────────────────┘
-```
+2. **Text Conditioning (`conditioning/text_conditioning.py`)** *(Abstract Interface: `BaseTextConditioner`)*:
+   - Converts natural text prompts and scene descriptions into latent context vectors for cross-attention layers.
 
-### Component Breakdown & Design Specs
+3. **Character Memory (`memory/character_memory.py`)** *(Abstract Interface: `BaseCharacterMemory`)*:
+   - Stores visual feature embeddings, face identity vectors, and reference character representations across shots.
 
-1. **Story / Prompt Compiler (`conditioning/`)** *(Target Interface)*:
-   - Planned component to compile multi-shot scripts, scene storyboards, and character interaction descriptions into structured shot sequence graphs.
+4. **World / Location Memory (`memory/world_memory.py`)** *(Abstract Interface: `BaseWorldMemory`)*:
+   - Stores scene background features, architectural keys, and environment lighting palettes across camera cuts.
 
-2. **Text Conditioning (`conditioning/text_conditioning.py`)** *(Target Interface)*:
-   - Planned interface to convert natural text prompts and scene descriptions into latent context vectors for cross-attention layers.
+5. **Video VAE (`models/vae/base.py`)** *(Abstract Interface: `BaseVideoVAE`)*:
+   - Inherits from `BaseModel`. Abstract 3D Spatiotemporal Variational Autoencoder contract (`encode`, `decode`, `forward`) to compress RGB video tensors into compact latent spaces.
 
-3. **Character Memory (`memory/character_memory.py`)** *(Target Interface)*:
-   - Planned interface to store visual feature embeddings, face identity vectors, and reference character representations across shots.
+6. **Video Generation Transformer (`models/transformer/base.py`)** *(Abstract Interface: `BaseVideoTransformer`)*:
+   - Inherits from `BaseModel`. Abstract 3D/Spatiotemporal Diffusion Transformer (DiT) contract (`forward`) for denoising latents guided by conditioning vectors.
 
-4. **World / Location Memory (`memory/world_memory.py`)** *(Target Interface)*:
-   - Planned interface to store scene background features, architectural keys, and environment lighting palettes across camera cuts.
+7. **Long Video Engine (`long_video/engine.py`)** *(Abstract Interface: `BaseLongVideoEngine`)*:
+   - Manages extended frame generation beyond single-chunk training windows using sliding windows and overlapping temporal chunks.
 
-5. **Video VAE (`models/base.py`)** *(Target Interface)*:
-   - Planned 3D Spatiotemporal Variational Autoencoder interface to compress RGB video tensors into compact latent spaces.
+8. **Consistency Checker (`evaluation/consistency.py`)** *(Abstract Interface: `BaseConsistencyChecker`)*:
+   - Automated evaluation contract measuring character identity feature distance, temporal coherence, frame flicker, and text-video alignment scores.
 
-6. **Video Generation Transformer (`models/base.py`)** *(Target Interface)*:
-   - Planned 3D/Spatiotemporal Diffusion Transformer (DiT) base interface for denoising latents guided by conditioning vectors.
-
-7. **Long Video Engine (`long_video/engine.py`)** *(Target Interface)*:
-   - Planned interface to manage extended frame generation beyond single-chunk training windows using sliding windows and overlapping temporal chunks.
-
-8. **Consistency Checker (`evaluation/consistency.py`)** *(Target Interface)*:
-   - Planned evaluation interface measuring character identity feature distance, temporal coherence, frame flicker, and text-video alignment scores.
-
-9. **Video Assembler (`video/assembler.py`)** *(Target Interface)*:
-   - Planned interface to combine output video shot chunks, apply shot transitions, and export final encoded video files (`MP4`, `WebM`).
+9. **Video Assembler (`video/assembler.py`)** *(Abstract Interface: `BaseVideoAssembler`)*:
+   - Combines output video shot chunks, applies shot transitions, and exports final encoded video files (`MP4`, `WebM`).
 
 ---
 
@@ -109,10 +52,16 @@ ArabianAnimeAI/
 │   └── default.yaml           # Target research YAML configuration file
 ├── data/
 │   ├── __init__.py
-│   └── dataset.py             # Base dataset interface contract
+│   └── dataset.py             # Base dataset abstract contract (BaseDataset)
 ├── models/
 │   ├── __init__.py
-│   └── base.py                # Abstract base model class
+│   ├── base.py                # Abstract base model class (BaseModel)
+│   ├── vae/
+│   │   ├── __init__.py
+│   │   └── base.py            # Abstract Video VAE contract (BaseVideoVAE)
+│   └── transformer/
+│       ├── __init__.py
+│       └── base.py            # Abstract Video Transformer contract (BaseVideoTransformer)
 ├── training/
 │   ├── __init__.py
 │   ├── seed.py                # Reproducible random seed manager
@@ -120,10 +69,11 @@ ArabianAnimeAI/
 │   └── checkpoint.py          # Checkpoint & structured metadata persistence
 ├── inference/
 │   ├── __init__.py
-│   └── pipeline.py            # End-to-end inference pipeline contract
+│   └── pipeline.py            # End-to-end inference pipeline abstract contract
 ├── conditioning/
 │   ├── __init__.py
-│   └── text_conditioning.py   # Text conditioning interface
+│   ├── story_compiler.py      # Abstract Story Compiler contract (BaseStoryCompiler)
+│   └── text_conditioning.py   # Abstract Text conditioning contract (BaseTextConditioner)
 ├── memory/
 │   ├── __init__.py
 │   ├── character_memory.py    # Character identity memory abstraction
@@ -138,14 +88,16 @@ ArabianAnimeAI/
 │   ├── __init__.py
 │   └── assembler.py           # Video stitching and assembly interface
 ├── tests/
-│   ├── test_checkpoint.py     # Unit tests for checkpoint persistence & metadata
+│   ├── test_checkpoint.py     # Real training resume validation & checkpoint tests
 │   ├── test_config.py         # Unit tests for config loading and overriding
+│   ├── test_dataset.py        # Unit tests for dataset base interface
 │   ├── test_directories.py    # Unit tests for directory layout existence
 │   ├── test_experiment.py     # Unit tests for experiment tracking and run IDs
 │   ├── test_imports.py        # Unit tests for clean package imports
-│   └── test_seed.py           # Unit tests for seed determinism
+│   ├── test_models.py         # Unit tests for model interfaces and parameter counts
+│   └── test_seed.py           # Unit tests for seed determinism & reconfiguration
 ├── scripts/
-│   └── verify_environment.py  # Verification utility script
+│   └── verify_environment.py  # Environment verification utility script
 ├── docs/
 │   └── architecture.md        # Comprehensive architecture specification
 ├── .gitignore
@@ -175,7 +127,7 @@ pip install -e .
 
 ### 2. Verify System Setup
 
-Run the environment verification script to confirm package imports, directory existence, seed setting, configuration loading, and checkpoint metadata logging:
+Run the environment verification script to confirm package imports, directory existence, seed setting, configuration loading, and real checkpoint resume logging:
 
 ```bash
 python3 scripts/verify_environment.py
@@ -186,18 +138,18 @@ python3 scripts/verify_environment.py
 Run the comprehensive pytest suite:
 
 ```bash
-pytest
+pytest -q
 ```
 
 ---
 
 ## Experiment & Checkpoint Management
 
-All experiments are logged inside `experiments/<experiment_name>_<timestamp>_<microseconds>/`:
+All experiments are logged inside `experiments/<experiment_name>_<timestamp>_<microseconds>_<uuid>/`:
 
 - `config_snapshot.yaml`: Copy of the exact config used for the run.
 - `metadata.json`: Run metadata including start timestamp and parameters.
-- `checkpoints/`: Model checkpoint files (`.pt`) alongside metadata JSON sidecars (`.pt.json`) preserving step count, loss metrics, and model versions.
+- `checkpoints/`: Model checkpoint files (`.pt`) alongside metadata JSON sidecars (`.pt.json`) preserving model state_dict, optimizer state_dict, scheduler state_dict, step count, epoch, loss metrics, and model versions.
 
 ---
 
